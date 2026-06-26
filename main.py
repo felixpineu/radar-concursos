@@ -88,7 +88,26 @@ def correr(mode):
             scoring.pontuar_tender(tender, pesos)
         sessao.flush()
 
-        # TODO Fase D: IA nos candidatos acima do limiar (degradação graciosa)
+        # --- Fase D: IA nos candidatos acima do limiar (degradação graciosa) ---
+        ai_processados = 0
+        if config.AI_API_KEY:
+            from datetime import datetime
+            from ai import summarize
+            for tender in repository.get_tenders_for_scoring(sessao):
+                if tender.ai_processed_at is not None:
+                    continue
+                if (tender.score or 0) < config.AI_THRESHOLD:
+                    continue
+                enriquecido = summarize.enrich(tender)
+                if enriquecido:
+                    for campo, valor in enriquecido.items():
+                        setattr(tender, campo, valor)
+                    tender.ai_processed_at = datetime.utcnow()
+                    ai_processados += 1
+            sessao.flush()
+            if ai_processados:
+                print(f"[ia] {ai_processados} concursos enriquecidos.")
+
         # TODO Fase E: email dos novos (repository.get_unemailed -> emailing.mail)
 
         houve_erro = any("erro" in v for v in sources_report.values())

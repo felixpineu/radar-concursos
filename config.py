@@ -33,8 +33,9 @@ MAIL_TO = os.environ.get("MAIL_TO", "felixpineu@gmail.com")
 MAIL_FROM = os.environ.get("MAIL_FROM", MAIL_USERNAME)
 
 # --- IA (Fase D, opcional — degradação graciosa se não houver chave) ---
-AI_API_KEY = os.environ.get("AI_API_KEY", "")
-AI_PROVIDER = os.environ.get("AI_PROVIDER", "anthropic")
+# A chave pode vir de AI_API_KEY ou ANTHROPIC_API_KEY (o SDK usa esta última).
+AI_API_KEY = os.environ.get("AI_API_KEY", "") or os.environ.get("ANTHROPIC_API_KEY", "")
+AI_MODEL = os.environ.get("RADAR_AI_MODEL", "claude-opus-4-8")
 AI_THRESHOLD = _int("RADAR_AI_THRESHOLD", 40)
 
 # --- Scoring (Fase C; pesos fora do código) ---
