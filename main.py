@@ -81,7 +81,13 @@ def correr(mode):
             }
             print(f"[{fonte.name}] {estado} | novos: {novos_fonte}")
 
-        # TODO Fase C: scoring (repository.get_tenders_for_scoring -> filters.scoring)
+        # --- Fase C: scoring (re-pontua tudo; pesos podem ter mudado) ---
+        from filters import scoring
+        pesos = scoring.carregar_pesos()
+        for tender in repository.get_tenders_for_scoring(sessao):
+            scoring.pontuar_tender(tender, pesos)
+        sessao.flush()
+
         # TODO Fase D: IA nos candidatos acima do limiar (degradação graciosa)
         # TODO Fase E: email dos novos (repository.get_unemailed -> emailing.mail)
 

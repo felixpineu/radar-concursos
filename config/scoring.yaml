@@ -1,0 +1,85 @@
+# Pesos do scoring — FORA do código, ajustáveis sem mexer na lógica.
+# CPV pesa mais que palavra-chave; comparação de palavras por PALAVRA INTEIRA;
+# negativos fortes penalizam; hard_exclude exclui à força.
+
+positivos:
+  cpv:
+    "79340": 30   # comunicação/publicidade/marketing
+    "79341": 30
+    "79342": 30
+    "79413": 30
+    "79416": 25   # relações públicas
+    "79822": 20   # design gráfico
+    "79961": 15   # fotografia
+    "79950": 20   # eventos
+    "79951": 20
+    "79952": 20
+    "79956": 20
+    "92111": 25   # produção audiovisual/vídeo
+    "92112": 20
+    "80400": 15   # educação/formação
+    "80500": 15
+    "80510": 15
+    "80520": 15
+    "80521": 15
+    "80522": 15
+    "72413": 15   # web design
+    "72420": 10   # desenvolvimento internet
+  keywords:
+    comunicação: 20
+    campanha: 15
+    marketing: 20
+    publicidade: 20
+    evento: 20
+    congresso: 15
+    seminário: 10
+    formação: 15
+    "ensino superior": 15
+    educação: 10
+    juventude: 15
+    empregabilidade: 15
+    website: 10
+    crm: 15
+    vídeo: 15
+    fotografia: 10
+    audiovisual: 15
+    streaming: 10
+    bootcamp: 20
+    academia: 20
+    "literacia digital": 15
+    branding: 15
+    conteúdos: 10
+
+negativos:
+  obras: -60
+  "obras públicas": -60
+  construção: -60
+  empreitada: -60
+  engenharia: -50
+  arquitetura: -40
+  hospitalar: -50
+  radiolog: -60
+  imagiolog: -60
+  "material clínico": -60
+  cirurg: -50
+  "equipamentos industriais": -60
+  combustível: -60
+  limpeza: -60
+  vigilância: -40
+  veículo: -50
+  máquina: -40
+  mobiliário: -40
+  "fornecimento de bens correntes": -40
+
+hard_exclude:    # excluem independentemente dos positivos
+  - radiolog
+  - hospitalar
+  - obras
+  - empreitada
+  - combustível
+
+limiares:
+  concorrer: 60    # >=60  -> ⭐⭐⭐ Concorrer
+  analisar: 40     # 40-59 -> ⭐⭐ Analisar
+  acompanhar: 20   # 20-39 -> ⭐ Acompanhar
+  # <20 -> ignorar (não entra no email)
