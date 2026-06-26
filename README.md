@@ -1,65 +1,54 @@
-# Radar de Concursos — Fórum Estudante (versão cloud)
+# Radar de Concursos — Fórum Estudante
 
-Programa que corre **sozinho na nuvem** (GitHub Actions), consulta o **TED**
-(concursos públicos europeus) filtrado pelas áreas da Fórum Estudante, e envia-te
-um **email diário** com o briefing. Não depende do teu computador estar ligado.
+Programa que corre **sozinho na nuvem** (GitHub Actions), procura concursos públicos
+nas áreas da Fórum Estudante e envia um **email diário** com o briefing. Não depende
+do teu computador estar ligado.
 
-> **Cobertura:** o TED só inclui concursos **acima dos limiares europeus**. Os
-> concursos nacionais mais pequenos (abaixo do limiar) não entram nesta fonte —
-> esses continuam a precisar do BASE/DRE. Ver secção "Passo seguinte".
+## Arquitetura (modular — uma fonte por ficheiro)
 
----
+- `radar.py` — orquestrador. Junta as fontes, aplica o perfil, monta o briefing,
+  gere a memória dos concursos já vistos e escreve `briefing.html`.
+- `filters.py` — perfil de interesse da Fórum Estudante (CPV + palavras-chave +
+  exclusões + score em estrelas). **Partilhado por todas as fontes.**
+- `source_ted.py` — **Fonte 1 (ATIVA): TED**, Radar Europeu / acima dos limiares.
+- `source_base.py` — **Fonte 2 (Fase 2, por ativar): Portal BASE**, concursos
+  nacionais, incluindo abaixo dos limiares europeus.
+- `source_dre.py` — **Fonte 3 (Fase 2, por ativar): Diário da República**.
+- `seen.json` — memória dos concursos já reportados (para enviar só os novos).
+- `.github/workflows/radar.yml` — agendador (dias úteis ~12h de Portugal) + email.
 
-## O que está nesta pasta
+Para acrescentar uma fonte nova no futuro, basta implementar o seu `fetch()` (que
+devolve oportunidades normalizadas) e ativá-la — o filtro e o briefing já a integram.
 
-- `radar_ted.py` — o programa (Python, sem instalar nada).
-- `.github/workflows/radar.yml` — o agendador (corre dias úteis ~12h de Portugal).
-- `README.md` — este guia.
+## O briefing é sempre separado por fonte
 
----
+1. Concursos encontrados no **TED**
+2. Concursos **nacionais / BASE / DR** (quando estas fontes estiverem ativas)
+3. **Limitações de cobertura** — aviso explícito de que, enquanto só o TED está
+   ativo, o relatório pode não incluir concursos nacionais abaixo dos limiares.
 
-## Instalação (uma vez, ~10 minutos)
+## "Mapear tudo, depois só os novos"
 
-**1. Cria uma conta GitHub** (grátis) em https://github.com, se ainda não tiveres.
+Na 1ª execução, tudo o que está aberto é considerado novo (mapa inicial). A partir
+daí, `seen.json` regista o que já foi reportado e o briefing destaca **apenas os
+novos** concursos de cada dia.
 
-**2. Cria um repositório novo** (botão "+" → "New repository"). Nome à escolha,
-ex.: `radar-concursos`. Podes deixá-lo privado.
+## Instalação dos segredos de email (uma vez)
 
-**3. Carrega estes ficheiros** para o repositório, mantendo a estrutura de pastas:
-- `radar_ted.py` na raiz
-- `.github/workflows/radar.yml` dentro da pasta `.github/workflows`
-
-(Podes arrastar os ficheiros na página do repositório com "Add file → Upload files".)
-
-**4. Cria uma "App Password" do Gmail** (para o programa poder enviar o email):
-- Tens de ter a verificação em 2 passos ativa na conta Google.
-- Vai a https://myaccount.google.com/apppasswords, cria uma password de aplicação
-  (ex.: nome "Radar"). Copia os 16 caracteres gerados.
-
-**5. Guarda os segredos no repositório:**
-- No repositório: **Settings → Secrets and variables → Actions → New repository secret**.
-- Cria `MAIL_USERNAME` = `felixpineu@gmail.com`
-- Cria `MAIL_PASSWORD` = a App Password de 16 caracteres do passo 4.
-
-**6. Pronto.** Vai ao separador **Actions**, escolhe "Radar Concursos Fórum
-Estudante" e clica **Run workflow** para testar já. Deves receber o email.
-A partir daí corre automaticamente todos os dias úteis.
-
----
+Em **Settings → Secrets and variables → Actions**, criar:
+- `MAIL_USERNAME` = `felixpineu@gmail.com`
+- `MAIL_PASSWORD` = uma **App Password do Gmail** (16 caracteres, sem espaços;
+  requer verificação em 2 passos ativa).
 
 ## Como afinar
 
-Abre `radar_ted.py` e edita no topo:
-- `CPV_INCLUIR` — famílias de CPV a captar.
-- `TERMOS_INTERESSE` / `TERMOS_EXCLUIR` — palavras que sobem/excluem.
-- `DIAS_RETROATIVOS` — janela de dias a varrer.
-- A hora está em `radar.yml` (`cron`, em UTC).
+- Áreas/palavras-chave/exclusões: `filters.py`.
+- Janela de dias e país do TED: `source_ted.py`.
+- Hora: `cron` em `.github/workflows/radar.yml` (em UTC).
 
----
+## Fase 2 — cobertura nacional
 
-## Passo seguinte (cobertura nacional completa)
-
-Para apanhar também os concursos **nacionais abaixo do limiar** de forma cloud,
-é preciso pedir acesso à **API do Portal BASE (IMPIC)** — gratuito, mas sujeito a
-autorização. Quando tiveres o acesso, junta-se um segundo módulo a este programa.
-Enquanto isso, o radar via Chrome (no teu computador) cobre esses concursos.
+Para incluir os concursos nacionais (sobretudo os pequenos, < 20.000 €), é preciso
+ativar `source_base.py` / `source_dre.py`. A via mais fiável é a **API do Portal
+BASE (IMPIC)**, que requer registo + autorização. Depois disso, implementa-se o
+`fetch()` real nesses ficheiros e o briefing passa a juntar as três fontes.
