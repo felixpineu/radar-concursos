@@ -8,7 +8,7 @@ on:
   workflow_dispatch:        # permite correr manualmente no botão "Run workflow"
 
 permissions:
-  contents: write           # necessário para guardar o estado (seen.json) de volta no repo
+  contents: write           # necessário para guardar a BD (radar.db) de volta no repo
 
 jobs:
   radar:
@@ -22,32 +22,21 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Instalar Playwright + Chromium (fonte BASE)
-        run: |
-          pip install playwright
-          python -m playwright install --with-deps chromium
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
 
-      - name: Gerar o briefing (todas as fontes ativas)
-        run: python radar.py
+      - name: Instalar Chromium (Playwright, fonte BASE)
+        run: python -m playwright install --with-deps chromium
 
-      - name: Guardar estado (concursos já vistos)
+      - name: Correr o radar (modo diário)
+        run: python main.py --mode daily
+
+      - name: Guardar a base de dados (radar.db)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add seen.json
-          git commit -m "Atualiza estado (concursos vistos)" || echo "Sem alterações de estado"
+          git add radar.db
+          git commit -m "Atualiza base de dados (execução diária)" || echo "Sem alterações na BD"
           git push || echo "Nada para enviar"
 
-      - name: Enviar o briefing por email
-        if: always()        # envia mesmo que o passo de estado não tenha alterações
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "Radar Concursos Fórum Estudante"
-          to: felixpineu@gmail.com
-          from: Radar Concursos <${{ secrets.MAIL_USERNAME }}>
-          html_body: file://briefing.html
+      # NOTA: o envio de email entra na Fase E (emailing/mail.py, a ler da BD).
