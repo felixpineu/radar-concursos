@@ -1,0 +1,36 @@
+name: Radar Concursos Fórum Estudante
+
+# Corre todos os dias úteis às 11:00 UTC (= 12:00 em Portugal no horário de verão,
+# 11:00 no horário de inverno). O cron do GitHub usa sempre UTC.
+on:
+  schedule:
+    - cron: "0 11 * * 1-5"
+  workflow_dispatch:        # permite correr manualmente no botão "Run workflow"
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter o código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Gerar o briefing (consulta TED)
+        run: python radar_ted.py
+
+      - name: Enviar o briefing por email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Radar Concursos Fórum Estudante"
+          to: felixpineu@gmail.com
+          from: Radar Concursos <${{ secrets.MAIL_USERNAME }}>
+          html_body: file://briefing.html
