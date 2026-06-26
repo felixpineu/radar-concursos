@@ -109,7 +109,7 @@ def fetch():
             "valor": _valor(n),
             "prazo": _prazo(n),
             "cpvs": _cpvs(n),
-            "link": f"https://ted.europa.eu/en/notice/{num}" if num else "",
+            "link": f"https://ted.europa.eu/pt/notice/-/detail/{num}" if num else "",
             "publicacao": _texto(n.get("publication-date"))[:10],
         })
     return (ops, f"OK — {len(notices)} anúncios lidos do TED (Portugal, últimos {DIAS_RETROATIVOS} dias).")
