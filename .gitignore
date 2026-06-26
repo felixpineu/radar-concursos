@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 .venv/
 briefing.html
+.pytest_cache/
+# radar.db é versionado de propósito nesta fase (persistência na cloud via commit).
