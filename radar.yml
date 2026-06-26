@@ -1,0 +1,48 @@
+name: Radar Concursos Fórum Estudante
+
+# Corre dias úteis às 11:00 UTC (= 12:00 em Portugal no horário de verão,
+# 11:00 no horário de inverno). O cron do GitHub usa sempre UTC.
+on:
+  schedule:
+    - cron: "0 11 * * 1-5"
+  workflow_dispatch:        # permite correr manualmente no botão "Run workflow"
+
+permissions:
+  contents: write           # necessário para guardar o estado (seen.json) de volta no repo
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter o código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Gerar o briefing (todas as fontes ativas)
+        run: python radar.py
+
+      - name: Guardar estado (concursos já vistos)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add seen.json
+          git commit -m "Atualiza estado (concursos vistos)" || echo "Sem alterações de estado"
+          git push || echo "Nada para enviar"
+
+      - name: Enviar o briefing por email
+        if: always()        # envia mesmo que o passo de estado não tenha alterações
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Radar Concursos Fórum Estudante"
+          to: felixpineu@gmail.com
+          from: Radar Concursos <${{ secrets.MAIL_USERNAME }}>
+          html_body: file://briefing.html
