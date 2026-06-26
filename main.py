@@ -108,13 +108,20 @@ def correr(mode):
             if ai_processados:
                 print(f"[ia] {ai_processados} concursos enriquecidos.")
 
-        # TODO Fase E: email dos novos (repository.get_unemailed -> emailing.mail)
+        # --- Fase E: email dos novos relevantes (só em modo daily) ---
+        emailed_count = 0
+        try:
+            from emailing import mail
+            emailed_count, estado_email = mail.enviar_briefing(sessao, mode)
+            print(f"[email] {estado_email}")
+        except Exception as e:  # email falhar não derruba a execução
+            print(f"[email] ERRO: {e}", file=sys.stderr)
 
         houve_erro = any("erro" in v for v in sources_report.values())
         status = "partial" if houve_erro else "success"
         repository.finish_run(
             sessao, run, status, sources_report,
-            total_novos, total_proc, emailed_count=0,
+            total_novos, total_proc, emailed_count=emailed_count,
             notes=f"modo={mode}; since={since.isoformat()}")
 
     print(f"\nOK ({mode}) — {total_novos} novos / {total_proc} processados. "
