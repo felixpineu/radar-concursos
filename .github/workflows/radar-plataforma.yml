@@ -1,4 +1,4 @@
-name: Radar Concursos Fórum Estudante
+name: Radar Concursos FE (plataforma)
 
 # Corre dias úteis às 11:00 UTC (= 12:00 em Portugal no horário de verão,
 # 11:00 no horário de inverno). O cron do GitHub usa sempre UTC.
