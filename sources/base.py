@@ -209,10 +209,7 @@ def _paginar(pg, total):
     return todas
 
 
-def _ler_detalhe(pg, det_id):
-    url = URL_DETALHE.format(id=det_id)
-    pg.goto(url, wait_until="domcontentloaded", timeout=45000)
-    pg.wait_for_timeout(900)
+def _extrair_dados_ficha(pg):
     dados = {}
     for tr in pg.query_selector_all("table tr"):
         tds = tr.query_selector_all("td, th")
@@ -221,7 +218,27 @@ def _ler_detalhe(pg, det_id):
             valor = tds[1].inner_text().strip()
             if chave and chave not in dados:
                 dados[chave] = valor
-    return normalize_detalhe(dados, url)
+    return dados
+
+
+def _ler_detalhe(pg, det_id):
+    """Abre a ficha e devolve op normalizada, ou None. Espera pela tabela em vez de
+    um tempo fixo (o runner do CI é lento); tenta recarregar uma vez se vier vazia."""
+    url = URL_DETALHE.format(id=det_id)
+    for tentativa in (1, 2):
+        pg.goto(url, wait_until="domcontentloaded", timeout=45000)
+        try:
+            # Espera até a tabela conter o rótulo do nº de anúncio (conteúdo real).
+            pg.wait_for_function(
+                "() => /N.?\\s*do an[uú]ncio DR/i.test(document.body.innerText)",
+                timeout=15000)
+        except Exception:
+            pg.wait_for_timeout(1500)
+        dados = _extrair_dados_ficha(pg)
+        if any("anúncio DR" in k or "anuncio DR" in k for k in dados):
+            return normalize_detalhe(dados, url)
+        pg.wait_for_timeout(1000)  # vazia — tenta recarregar
+    return None
 
 
 # --------------------------------------------------------------------------- #
@@ -265,12 +282,19 @@ class BaseGovSource(BaseSource):
                     ids_cand.add(ln["det_id"])
                     candidatos.append(ln)
 
+                vazias = falhas = 0
+                ultimo_erro = ""
                 for ln in candidatos[:MAX_FICHAS]:
                     try:
                         rec = _ler_detalhe(pg, ln["det_id"])
-                    except Exception:
+                    except Exception as e:  # noqa
+                        falhas += 1
+                        ultimo_erro = f"{type(e).__name__}: {e}"
                         continue
-                    if rec and rec["source_url"] not in vistos:
+                    if rec is None:
+                        vazias += 1
+                        continue
+                    if rec["source_url"] not in vistos:
                         vistos.add(rec["source_url"])
                         registos.append(rec)
                     pg.wait_for_timeout(ATRASO_FICHA_MS)
@@ -280,7 +304,10 @@ class BaseGovSource(BaseSource):
             return (registos, f"AVISO: BASE interrompido ({type(e).__name__}: {e}). "
                               f"{len(registos)} registos antes da falha.")
 
+        diag = f"; fichas vazias/rejeitadas: {vazias}; erros de ficha: {falhas}"
+        if falhas and ultimo_erro:
+            diag += f" (último: {ultimo_erro})"
         estado = (f"OK — BASE: {total} anúncios (Aquisição de serviços, desde {since.isoformat()}); "
                   f"{len(candidatos)} candidatos; {len(registos)} concursos públicos/limitados "
-                  f"normalizados.")
+                  f"normalizados{diag}.")
         return (registos, estado)
