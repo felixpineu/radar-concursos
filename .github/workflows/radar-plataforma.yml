@@ -35,6 +35,11 @@ jobs:
         run: python -m playwright install --with-deps chromium
 
       - name: Correr o radar
+        env:
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
         run: python main.py --mode "${{ github.event.inputs.mode || 'daily' }}"
 
       - name: Guardar a base de dados (radar.db)
