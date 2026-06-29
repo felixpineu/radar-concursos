@@ -19,8 +19,8 @@ from utils import text
 
 URL_PESQUISA = "https://www.base.gov.pt/Base4/pt/pesquisa/?type=anuncios"
 URL_DETALHE = "https://www.base.gov.pt/Base4/pt/detalhe/?type=anuncios&id={id}"
-MAX_PAGINAS = 40          # trava de segurança
-MAX_FICHAS = 120          # trava ao nº de fichas de detalhe abertas
+MAX_PAGINAS = 80          # trava de segurança (suficiente para backfill de ~45 dias)
+MAX_FICHAS = 200          # trava ao nº de fichas de detalhe abertas
 ATRASO_FICHA_MS = 400     # ser educado entre fichas
 MSG_ERRO_SERVIDOR = "Não foi possível obter os dados do servidor"
 

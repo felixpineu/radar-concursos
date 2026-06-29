@@ -24,7 +24,7 @@ DB_URL = os.environ.get("RADAR_DB_URL", f"sqlite:///{BASE_DIR / 'radar.db'}")
 
 # --- Janelas de recolha ---
 DAILY_LOOKBACK_DAYS = _int("RADAR_DAILY_LOOKBACK_DAYS", 4)
-BACKFILL_LOOKBACK_DAYS = _int("RADAR_BACKFILL_LOOKBACK_DAYS", 30)
+BACKFILL_LOOKBACK_DAYS = _int("RADAR_BACKFILL_LOOKBACK_DAYS", 45)
 
 # --- Email (Fase E) ---
 MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "")
